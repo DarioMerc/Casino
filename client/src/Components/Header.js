@@ -1,9 +1,10 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import styled from "styled-components";
 
 export const Header = () => {
     return (
-        <div>
+        <Wrapper>
             <NavLink to="/">
                 <p>Home</p>
             </NavLink>
@@ -13,6 +14,12 @@ export const Header = () => {
             <NavLink to="/leaderboard">
                 <p>Leaderboard</p>
             </NavLink>
-        </div>
+        </Wrapper>
     );
 };
+
+const Wrapper = styled.div`
+    display: flex;
+    flex-direction: horizontal;
+    border: 1px solid black;
+`;
