@@ -20,17 +20,22 @@ export const Blackjack = () => {
 
     const [deck, setDeck] = useState();
 
-    const [initialDeal, setInitialDeal] = useState(true);
+    const [dealersTurn, setDealersTurn] = useState(false);
     const [roundStarted, setRoundStarted] = useState(false);
-
+    const [result, setResult] = useState();
+    const [gameover, setGameover] = useState(false);
     //Create Deck
     useEffect(() => {
         async function fetchData() {
+            const deckIdRes = await fetch(
+                `https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=1`
+            );
+            let deckIdData = await deckIdRes.json();
             const deckRes = await fetch(
-                `https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6`
+                `https://deckofcardsapi.com/api/deck/${deckIdData.deck_id}/draw/?count=52`
             );
             let deckData = await deckRes.json();
-            setDeck(deckData);
+            setDeck(deckData.cards);
         }
         fetchData();
     }, []);
@@ -38,74 +43,99 @@ export const Blackjack = () => {
     //Deal Cards
     function dealCards() {
         setRoundStarted(true);
+        setDealersTurn(false);
         setBalance(balance - bet);
-
-        fetch(
-            `https://deckofcardsapi.com/api/deck/${deck.deck_id}/draw/?count=4`
-        )
-            .then((res) => res.json())
-            .then((data) => {
-                setPlayerHand(data.cards.slice(0, 2));
-                setDealerHand(data.cards.slice(2, 4));
-            });
+        setPlayerHand(deck.splice(0, 2));
+        setDealerHand(deck.splice(0, 2));
     }
 
     //CALCULATE HANDS
     useEffect(() => {
         calculateHand("PLAYER", playerHand);
         calculateHand("DEALER", dealerHand);
-    }, [playerHand, dealerHand]);
+    }, [playerHand, dealerHand, dealersTurn]);
     function calculateHand(handName, hand) {
         let sum = 0;
-        hand.forEach((card) => {
-            if (card.value === "ACE") {
-                sum > 21 ? (sum += 1) : (sum += 11);
-            } else if (
-                card.value === "JACK" ||
-                card.value === "QUEEN" ||
-                card.value === "KING"
-            ) {
-                sum += 10;
+        hand.map((card, k) => {
+            if (handName === "DEALER" && !dealersTurn && k == 1) {
             } else {
-                sum += parseInt(card.value);
+                if (card.value === "ACE") {
+                    sum += 11;
+                } else if (
+                    card.value === "JACK" ||
+                    card.value === "QUEEN" ||
+                    card.value === "KING"
+                ) {
+                    sum += 10;
+                } else {
+                    sum += parseInt(card.value);
+                }
             }
         });
+
+        //CHECK FOR ACE AND BUST
+        if (hand.some((card) => card.value === "ACE") && sum > 21) {
+            sum -= 10;
+        }
+
+        //AUTO-STAND IF BLACKJACK OR BUST
+        if (handName === "PLAYER" && sum >= 21) {
+            stand();
+        }
 
         handName === "PLAYER" ? setPlayerTotal(sum) : setDealerTotal(sum);
     }
 
     //Hit
-    function hit() {
-        fetch(
-            `https://deckofcardsapi.com/api/deck/${deck.deck_id}/draw/?count=1`
-        )
-            .then((res) => res.json())
-            .then((data) => {
-                console.log(data.cards[0]);
-                let newHand = playerHand.concat(data.cards[0]);
-                setPlayerHand(newHand);
-            });
+    function hit(handName) {
+        if (handName === "PLAYER") {
+            console.log("PLAYER HIT");
+            setPlayerHand(playerHand.concat(deck.shift()));
+        } else {
+            console.log("DEALER HIT");
+            setDealerHand(dealerHand.concat(deck.shift()));
+        }
     }
     //Stand
     function stand() {
-        setInitialDeal(false);
-        //dealer tries to beat players hand
-        //if higher, win
-        //if 21, win
-        //if over 21, loss
-        //push?
+        setDealersTurn(true);
     }
+    //Endgame
+    useEffect(() => {
+        //FIX ALL OF THIS AAAAAAAAAAAAAAAAAAA
+        console.log("ENDGAME CHECK");
+        if (dealerTotal < 17 && dealersTurn && playerTotal < 21) {
+            hit("DEALER");
+        }
+
+        if (playerTotal == dealerTotal) {
+            setResult("PUSH");
+            setRoundStarted(false);
+        } else if (playerTotal > 21) {
+            setResult("PLAYER BUSTED");
+            setRoundStarted(false);
+        } else if (dealerTotal > playerTotal) {
+            setResult("DEALER WINS");
+            setRoundStarted(false);
+        } else if (dealerTotal > 21 || playerTotal > dealerTotal) {
+            setResult("PLAYER WINS");
+            setRoundStarted(false);
+            setBalance(balance + bet * 2);
+        }
+    }, [dealersTurn]);
+
     return (
         <>
             {!deck ? (
                 <p>loading</p>
             ) : (
-                <div>
+                <Container>
                     <h1>BlackJack</h1>
+                    <p>Result: {result}</p>
                     <hr />
                     <h2>Dealers Hand ({dealerTotal})</h2>
                     {dealerHand.map((card, k) => {
-                        if (initialDeal && k == 1) {
+                        if (!dealersTurn && k == 1) {
                             return <Card src={flippedCard} />;
                         } else {
                             return <Card src={card.image} />;
@@ -132,14 +162,29 @@ export const Blackjack = () => {
                         Bet
                     </button>
                     <hr />
-                    <button onClick={() => hit()}>Hit</button>
-                    <button onClick={() => stand()}>Stand</button>
-                </div>
+                    <button
+                        disabled={dealersTurn || !roundStarted}
+                        onClick={() => hit("PLAYER")}
+                    >
+                        Hit
+                    </button>
+                    <button
+                        disabled={dealersTurn || !roundStarted}
+                        onClick={() => stand()}
+                    >
+                        Stand
+                    </button>
+                </Container>
             )}
         </>
     );
 };
-
+const Container = styled.div`
+    width: 80%;
+    height: auto;
+    margin: 5px auto;
+    border: 1px solid black;
+`;
 const Card = styled.img`
     width: 8%;
     height: auto;

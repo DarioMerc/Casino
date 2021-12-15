@@ -22,4 +22,6 @@ const Wrapper = styled.div`
     display: flex;
     flex-direction: horizontal;
     border: 1px solid black;
+    width: 80%;
+    margin: auto;
 `;
