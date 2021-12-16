@@ -5,15 +5,16 @@ import styled from "styled-components";
 export const Header = () => {
     return (
         <Wrapper>
-            <NavLink to="/">
+            <NavItem to="/">
                 <p>Home</p>
-            </NavLink>
-            <NavLink to="/blackjack">
+            </NavItem>
+            <NavItem to="/blackjack">
                 <p>BlackJack</p>
-            </NavLink>
-            <NavLink to="/leaderboard">
+            </NavItem>
+            <NavItem to="/leaderboard">
                 <p>Leaderboard</p>
-            </NavLink>
+            </NavItem>
+            <p>Balance: </p>
         </Wrapper>
     );
 };
@@ -25,3 +26,7 @@ const Wrapper = styled.div`
     width: 80%;
     margin: auto;
 `;
+
+const NavItem = styled(NavLink)`
+margin: 5px;
+`

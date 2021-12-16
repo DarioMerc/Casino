@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import flippedCard from "./flipped-card.png";
-//player makes bet
-//round starts
-//cards are dealt
-//disable betting
-//hit or stand
-//did player win or lose?
-//reset
+import GlobalStyle, { themeVars } from "../GlobalStyle";
 
 export const Blackjack = () => {
     const [balance, setBalance] = useState(1000);
@@ -21,9 +15,8 @@ export const Blackjack = () => {
     const [deck, setDeck] = useState();
 
     const [dealersTurn, setDealersTurn] = useState(false);
-    const [roundStarted, setRoundStarted] = useState(false);
-    const [result, setResult] = useState();
-    const [gameover, setGameover] = useState(false);
+    const [ongoingGame, setOngoingGame] = useState(false);
+    const [result, setResult] = useState("-");
     //Create Deck
     useEffect(() => {
         async function fetchData() {
@@ -40,9 +33,28 @@ export const Blackjack = () => {
         fetchData();
     }, []);
 
+    function shuffleDeck(array) {
+        setDeck();
+        let currentIndex = array.length,
+            randomIndex;
+        while (currentIndex !== 0) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex],
+                array[currentIndex],
+            ];
+        }
+        return array
+    }
     //Deal Cards
     function dealCards() {
-        setRoundStarted(true);
+        setResult("-");
+        let shuffDeck = []
+        if (deck.length < 52) {
+            setDeck(shuffleDeck(deck.concat(playerHand, dealerHand)));
+        }
+        setOngoingGame(true);
         setDealersTurn(false);
         setBalance(balance - bet);
         setPlayerHand(deck.splice(0, 2));
@@ -53,12 +65,13 @@ export const Blackjack = () => {
     useEffect(() => {
         calculateHand("PLAYER", playerHand);
         calculateHand("DEALER", dealerHand);
-    }, [playerHand, dealerHand, dealersTurn]);
+    });
+
     function calculateHand(handName, hand) {
         let sum = 0;
         hand.map((card, k) => {
-            if (handName === "DEALER" && !dealersTurn && k == 1) {
-            } else {
+            //This condition makes sure that the dealers 2nd card doesnt get calculated into the total before their turn
+            if (!(handName === "DEALER" && !dealersTurn && k === 1)) {
                 if (card.value === "ACE") {
                     sum += 11;
                 } else if (
@@ -83,6 +96,10 @@ export const Blackjack = () => {
             stand();
         }
 
+        if (dealersTurn && sum < 17 && playerTotal <= 21) {
+            hit("DEALER");
+        }
+
         handName === "PLAYER" ? setPlayerTotal(sum) : setDealerTotal(sum);
     }
 
@@ -100,93 +117,134 @@ export const Blackjack = () => {
     function stand() {
         setDealersTurn(true);
     }
+
     //Endgame
     useEffect(() => {
-        //FIX ALL OF THIS AAAAAAAAAAAAAAAAAAA
-        console.log("ENDGAME CHECK");
-        if (dealerTotal < 17 && dealersTurn && playerTotal < 21) {
-            hit("DEALER");
+        //Dont check for any endgame outcome before dealer has done their turn
+        if (dealersTurn) {
+            //CHECK IF PLAYER BUSTED (The only ending that can occur before Dealer flips their cards)
+            if (playerTotal > 21) {
+                setResult("PLAYER BUSTED");
+                setOngoingGame(false);
+            }
+            //COMPARE HAND WITH DEALERS
+            if (dealerTotal >= 17) {
+                if (playerTotal === dealerTotal) {
+                    setResult("PUSH");
+                    ongoingGame && setBalance(parseInt(balance + bet));
+                    setOngoingGame(false);
+                } else if (dealerTotal > 21) {
+                    setResult("DEALER BUSTED");
+                    ongoingGame && setBalance(balance + bet * 2);
+                    setOngoingGame(false);
+                } else if (dealerTotal > playerTotal) {
+                    setResult("DEALER WINS");
+                    setOngoingGame(false);
+                } else if (playerTotal > dealerTotal) {
+                    setResult("PLAYER WINS");
+                    ongoingGame && setBalance(balance + bet * 2);
+                    setOngoingGame(false);
+                }
+            }
         }
-
-        if (playerTotal == dealerTotal) {
-            setResult("PUSH");
-            setRoundStarted(false);
-        } else if (playerTotal > 21) {
-            setResult("PLAYER BUSTED");
-            setRoundStarted(false);
-        } else if (dealerTotal > playerTotal) {
-            setResult("DEALER WINS");
-            setRoundStarted(false);
-        } else if (dealerTotal > 21 || playerTotal > dealerTotal) {
-            setResult("PLAYER WINS");
-            setRoundStarted(false);
-            setBalance(balance + bet * 2);
-        }
-    }, [dealersTurn]);
+    });
 
     return (
         <>
-            {!deck ? (
-                <p>loading</p>
-            ) : (
-                <Container>
-                    <h1>BlackJack</h1>
-                    <p>Result: {result}</p>
-                    <hr />
-                    <h2>Dealers Hand ({dealerTotal})</h2>
-                    {dealerHand.map((card, k) => {
-                        if (!dealersTurn && k == 1) {
-                            return <Card src={flippedCard} />;
-                        } else {
+            <Container>
+                <h1 class="automargin">BlackJack</h1>
+                <p class="automargin">{result}</p>
+                <hr />
+                {!deck ? (
+                    <p class="automargin">loading</p>
+                ) : (
+                    <>
+                        <h2 class="automargin">Dealers Hand ({dealerTotal})</h2>
+                        <CardWrapper>
+
+                        {dealerHand.map((card, k) => {
+                            if (!dealersTurn && k === 1) {
+                                return <Card src={flippedCard} />;
+                            } else {
+                                return <Card src={card.image} />;
+                            }
+                        })}
+                        </CardWrapper>
+                        <hr />
+                        <h2 class="automargin">Your Hand ({playerTotal})</h2>
+                        <CardWrapper>
+                        {playerHand.map((card, k) => {
                             return <Card src={card.image} />;
-                        }
-                    })}
-                    <hr />
-                    <h2>Your Hand ({playerTotal})</h2>
-                    {playerHand.map((card, k) => {
-                        return <Card src={card.image} />;
-                    })}
-                    <hr />
-                    <p>Your Balance: {balance}</p>
-                    <input
-                        value={bet}
-                        onChange={(e) => {
-                            setBet(e.target.value);
-                        }}
-                        disabled={roundStarted}
+                        })}
+                        </CardWrapper>
+                    </>
+                )}
+                <hr />
+                <OptionsContainer>
+                <Option
+                    disabled={dealersTurn || !ongoingGame}
+                    onClick={() => hit("PLAYER")}
+                >
+                    Hit
+                </Option>
+                <Option
+                    disabled={dealersTurn || !ongoingGame}
+                    onClick={() => stand()}
+                >
+                    Stand
+                </Option>
+                </OptionsContainer>
+                <BettingContainer>
+                <input
+                    value={bet}
+                    onChange={(e) => {
+                        setBet(e.target.value);
+                    }}
+                    disabled={ongoingGame}
                     />
-                    <button
-                        disabled={!bet || roundStarted}
-                        onClick={() => dealCards()}
+                <button
+                    disabled={!bet || bet > balance || ongoingGame}
+                    onClick={() => dealCards()}
                     >
-                        Bet
-                    </button>
-                    <hr />
-                    <button
-                        disabled={dealersTurn || !roundStarted}
-                        onClick={() => hit("PLAYER")}
-                    >
-                        Hit
-                    </button>
-                    <button
-                        disabled={dealersTurn || !roundStarted}
-                        onClick={() => stand()}
-                    >
-                        Stand
-                    </button>
-                </Container>
-            )}
+                    Bet
+                </button>
+                </BettingContainer>
+                    <p>Your Balance: {balance}</p>
+            </Container>
         </>
     );
 };
 const Container = styled.div`
     width: 80%;
-    height: auto;
-    margin: 5px auto;
+    height: 100%;
+    margin: auto;
+    margin-top: 5px;
     border: 1px solid black;
+    display: flex;
+    flex-direction: column;
 `;
 const Card = styled.img`
-    width: 8%;
+    width: 10%;
     height: auto;
     margin: 5px;
 `;
+const CardWrapper = styled.div`
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+`
+const OptionsContainer = styled.div`
+    display: flex;
+    justify-content: space-evenly;
+`
+const Option = styled.button`
+    width: 15%;
+    height: 30px;
+    margin: 5px;
+`
+
+const BettingContainer = styled.div`
+display: flex;
+flex-direction: column;
+    margin: 5px auto;
+`
