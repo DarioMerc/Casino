@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
+import { UserContext } from "./UserContext";
 
 export const Header = () => {
+    const {user,balance} = useContext(UserContext)
     return (
         <Wrapper>
             <NavItem to="/">
@@ -14,7 +16,9 @@ export const Header = () => {
             <NavItem to="/leaderboard">
                 <p>Leaderboard</p>
             </NavItem>
-            <p>Balance: </p>
+            <span style={{width:"100%"}}></span>
+            <Item>{user.username}</Item>
+            <Item>Balance: {balance}</Item>
         </Wrapper>
     );
 };
@@ -25,8 +29,13 @@ const Wrapper = styled.div`
     border: 1px solid black;
     width: 80%;
     margin: auto;
+    align-items: center;
 `;
 
 const NavItem = styled(NavLink)`
 margin: 5px;
+`
+
+const Item = styled.p`
+    margin: 5px;
 `

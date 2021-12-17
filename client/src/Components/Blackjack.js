@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import flippedCard from "./flipped-card.png";
 import GlobalStyle, { themeVars } from "../GlobalStyle";
+import { UserContext } from "./UserContext";
 
 export const Blackjack = () => {
-    const [balance, setBalance] = useState(1000);
+    const {user, balance, setBalance} = useContext(UserContext)
     const [bet, setBet] = useState(100);
 
     const [playerHand, setPlayerHand] = useState([]);
@@ -17,6 +18,7 @@ export const Blackjack = () => {
     const [dealersTurn, setDealersTurn] = useState(false);
     const [ongoingGame, setOngoingGame] = useState(false);
     const [result, setResult] = useState("-");
+
     //Create Deck
     useEffect(() => {
         async function fetchData() {
@@ -50,7 +52,6 @@ export const Blackjack = () => {
     //Deal Cards
     function dealCards() {
         setResult("-");
-        let shuffDeck = []
         if (deck.length < 52) {
             setDeck(shuffleDeck(deck.concat(playerHand, dealerHand)));
         }
@@ -66,7 +67,6 @@ export const Blackjack = () => {
         calculateHand("PLAYER", playerHand);
         calculateHand("DEALER", dealerHand);
     });
-
     function calculateHand(handName, hand) {
         let sum = 0;
         hand.map((card, k) => {
@@ -96,7 +96,7 @@ export const Blackjack = () => {
             stand();
         }
 
-        if (dealersTurn && sum < 17 && playerTotal <= 21) {
+        if (handName === "DEALER" && dealersTurn && sum < 17 && playerTotal <= 21) {
             hit("DEALER");
         }
 
@@ -117,7 +117,6 @@ export const Blackjack = () => {
     function stand() {
         setDealersTurn(true);
     }
-
     //Endgame
     useEffect(() => {
         //Dont check for any endgame outcome before dealer has done their turn
@@ -125,43 +124,59 @@ export const Blackjack = () => {
             //CHECK IF PLAYER BUSTED (The only ending that can occur before Dealer flips their cards)
             if (playerTotal > 21) {
                 setResult("PLAYER BUSTED");
+                ongoingGame && updateBalance("loss")
                 setOngoingGame(false);
             }
             //COMPARE HAND WITH DEALERS
             if (dealerTotal >= 17) {
                 if (playerTotal === dealerTotal) {
                     setResult("PUSH");
-                    ongoingGame && setBalance(parseInt(balance + bet));
                     setOngoingGame(false);
                 } else if (dealerTotal > 21) {
                     setResult("DEALER BUSTED");
-                    ongoingGame && setBalance(balance + bet * 2);
+                    ongoingGame && updateBalance("win")
                     setOngoingGame(false);
                 } else if (dealerTotal > playerTotal) {
                     setResult("DEALER WINS");
+                    ongoingGame && updateBalance("loss")
                     setOngoingGame(false);
-                } else if (playerTotal > dealerTotal) {
+                } else if (playerTotal > dealerTotal && playerTotal <= 21) {
                     setResult("PLAYER WINS");
-                    ongoingGame && setBalance(balance + bet * 2);
+                    ongoingGame && updateBalance("win");
                     setOngoingGame(false);
                 }
             }
         }
     });
-
+    //Update Balance
+    function updateBalance(outcome){
+        fetch(`/api/${user._id}/balance`, {
+            method: "PUT",
+            headers: {
+                "Content-type": "application/json",
+            },
+            body: JSON.stringify({
+                bet:bet,
+                outcome,
+            }),
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(data)
+            });
+    }
     return (
         <>
             <Container>
-                <h1 class="automargin">BlackJack</h1>
-                <p class="automargin">{result}</p>
+                <h1 className="automargin">BlackJack</h1>
+                <p className="automargin">{result}</p>
                 <hr />
                 {!deck ? (
-                    <p class="automargin">loading</p>
+                    <p className="automargin">loading</p>
                 ) : (
                     <>
-                        <h2 class="automargin">Dealers Hand ({dealerTotal})</h2>
+                        <h2 className="automargin">Dealers Hand ({dealerTotal})</h2>
                         <CardWrapper>
-
                         {dealerHand.map((card, k) => {
                             if (!dealersTurn && k === 1) {
                                 return <Card src={flippedCard} />;
@@ -171,7 +186,7 @@ export const Blackjack = () => {
                         })}
                         </CardWrapper>
                         <hr />
-                        <h2 class="automargin">Your Hand ({playerTotal})</h2>
+                        <h2 className="automargin">Your Hand ({playerTotal})</h2>
                         <CardWrapper>
                         {playerHand.map((card, k) => {
                             return <Card src={card.image} />;
@@ -187,13 +202,6 @@ export const Blackjack = () => {
                 >
                     Hit
                 </Option>
-                <Option
-                    disabled={dealersTurn || !ongoingGame}
-                    onClick={() => stand()}
-                >
-                    Stand
-                </Option>
-                </OptionsContainer>
                 <BettingContainer>
                 <input
                     value={bet}
@@ -209,7 +217,13 @@ export const Blackjack = () => {
                     Bet
                 </button>
                 </BettingContainer>
-                    <p>Your Balance: {balance}</p>
+                <Option
+                    disabled={dealersTurn || !ongoingGame}
+                    onClick={() => stand()}
+                >
+                    Stand
+                </Option>
+                </OptionsContainer>
             </Container>
         </>
     );
@@ -236,15 +250,17 @@ const CardWrapper = styled.div`
 const OptionsContainer = styled.div`
     display: flex;
     justify-content: space-evenly;
+    align-items: center;
+    position: relative;
 `
 const Option = styled.button`
     width: 15%;
-    height: 30px;
-    margin: 5px;
+    height: 100%;
+    position: relative;
 `
 
 const BettingContainer = styled.div`
 display: flex;
 flex-direction: column;
-    margin: 5px auto;
+    margin: 5px 0px;
 `

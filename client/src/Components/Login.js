@@ -1,12 +1,16 @@
-import React from 'react'
-import { Link } from 'react-router-dom';
+import React, { useContext, useState } from 'react'
+import { Link,useHistory } from 'react-router-dom';
 import styled from 'styled-components';
+import { UserContext } from "./UserContext";
+
+const isEmpty = (str) => {
+    return str.length === 0 || !str.trim();
+};
 
 export const Login = () => {
-
-    const isEmpty = (str) => {
-        return str.length === 0 || !str.trim();
-    };
+    const {setUser} = useContext(UserContext)
+    const [error,setError] = useState();
+    let history = useHistory()
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,16 +31,20 @@ export const Login = () => {
                 .then((res) => res.json())
                 .then((data) => {
                     if (data.status != 200) {
-                        //ERROR
+                        setError(data.message)
                     } else {
-                        //SET USER
+                        let currentUser = data.user;
+                        delete currentUser.password;
+                        localStorage.setItem("user", currentUser._id);
+                        setUser(currentUser);
+                        history.push("/");
                     }
                 })
                 .catch((err) => {
                     console.log(err);
                 });
         } else {
-            //SET ERROR. FIELDS CANT BE EMPTY
+            setError("Fields cannot be left empty.")
         }
     };
 
@@ -55,7 +63,7 @@ export const Login = () => {
                         <button type="submit">Login</button>
                     </FormWrapper>
                 </form>
-                <p>error</p>
+                <p>{error}</p>
                 <StyledLink to="/register">
                     <p>Create Account</p>
                 </StyledLink>

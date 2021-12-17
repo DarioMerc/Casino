@@ -1,11 +1,16 @@
-import React from 'react'
-import { Link } from 'react-router-dom';
+import React, { useContext, useState } from 'react'
+import { Link,useHistory } from 'react-router-dom';
 import styled from 'styled-components';
+import { UserContext } from './UserContext';
+
+const isEmpty = (str) => {
+    return str.length === 0 || !str.trim();
+};
 
 const Register = () => {
-    const isEmpty = (str) => {
-        return str.length === 0 || !str.trim();
-    };
+    const {setUser} = useContext(UserContext)
+    const [error,setError] = useState("")
+    let history = useHistory()
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -19,9 +24,9 @@ const Register = () => {
             isEmpty(password) ||
             isEmpty(passwordConfirm)
         ) {
-            // setError("All fields must be filled.");
+            setError("All fields must be filled.");
         } else if (password !== passwordConfirm) {
-            // setError("Passwords do not match.");
+            setError("Passwords do not match.");
         } else {
             fetch("/api/register", {
                 method: "POST",
@@ -30,16 +35,20 @@ const Register = () => {
                 },
                 body: JSON.stringify({
                     username,
-                    password,
-                    "balance":1000
+                    password
                 }),
             })
                 .then((res) => res.json())
                 .then((data) => {
+                    console.log(data)
                     if (data.status == 201) {
                         //CREATE USER AND LOG THEM IN
+                        let currentUser = data.user;
+                        localStorage.setItem("user", currentUser._id);
+                        setUser(currentUser);
+                        history.push("/");
                     } else {
-                        //ERROR
+                        setError(data.message)
                     }
                 });
         }
@@ -49,7 +58,7 @@ const Register = () => {
         <Wrapper>
             <LoginContent>
                 <h2>Register</h2>
-                <form id="login" onSubmit={handleSubmit}>
+                <form id="register" onSubmit={handleSubmit}>
                     <FormWrapper>
                         <input id="username" placeholder="Username"></input>
                         <input
@@ -65,7 +74,7 @@ const Register = () => {
                         <button type="submit">Register</button>
                     </FormWrapper>
                 </form>
-                <p>error</p>
+                <p>{error}</p>
                 <StyledLink to="/login">
                     <p>Login</p>
                 </StyledLink>
