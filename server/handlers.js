@@ -110,10 +110,16 @@ const getUser = async (req,res)=>{
     }
 }
 const getLeaderboard = async (req,res)=>{
+    const client = new MongoClient(MONGO_URI, options);
     try {
-        
+        await client.connect();
+        const db = client.db("Casino");
+        //SORT ARRAY BY SCORE AND HIDE PASSWORD
+        const users = await db.collection("users").find().toArray();
+        await client.close();
+        res.status(200).json({status:200,data:users})
     } catch (error) {
-
+        res.status(500).json({ status: 500, message: error });
     }
 }
 //UPDATE BALANCE

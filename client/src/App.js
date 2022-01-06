@@ -3,6 +3,7 @@ import { BrowserRouter, Switch, Route } from "react-router-dom";
 import styled from "styled-components";
 import { Blackjack } from "./Components/Blackjack";
 import { Header } from "./Components/Header";
+import { Leaderboard } from "./Components/Leaderboard";
 import { Login } from "./Components/Login";
 import Register from "./Components/Register";
 import { UserContext } from "./Components/UserContext";
@@ -22,7 +23,7 @@ const App = () => {
                     {user ? <Blackjack /> : <Login/>}
                 </Route>
                 <Route path="/leaderboard">
-                    <p>leaderboard</p>
+                    {user ? <Leaderboard/> : <Login/>}
                 </Route>
                 <Route path="/login">
                     <Login/>
