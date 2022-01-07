@@ -5,6 +5,14 @@ import { UserContext } from "./UserContext";
 
 export const Header = () => {
     const {user,balance} = useContext(UserContext)
+
+    const handleLogout = () => {
+        if (window.confirm("Confirm Logout?")) {
+            localStorage.removeItem("user");
+            window.location.replace("/");
+        }
+    };
+
     return (
         <Wrapper>
             <NavItem to="/">
@@ -17,7 +25,7 @@ export const Header = () => {
                 <p>Leaderboard</p>
             </NavItem>
             <span style={{width:"100%"}}></span>
-            <Item>{user.username}</Item>
+            <Item onClick={handleLogout}>{user.username}</Item>
             <Item>Balance: {balance}</Item>
         </Wrapper>
     );

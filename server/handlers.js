@@ -115,7 +115,8 @@ const getLeaderboard = async (req,res)=>{
         await client.connect();
         const db = client.db("Casino");
         //SORT ARRAY BY SCORE AND HIDE PASSWORD
-        const users = await db.collection("users").find().toArray();
+        const users = await db.collection("users").find({}, { projection: { password: 0 } }).sort({balance:-1}).toArray();
+        console.log(users)
         await client.close();
         res.status(200).json({status:200,data:users})
     } catch (error) {

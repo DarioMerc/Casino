@@ -1,7 +1,9 @@
 import React, { useState,useEffect } from 'react'
+import styled from 'styled-components';
 
 export const Leaderboard = () => {
     const [leaderboard,setLeaderboard] = useState();
+    const [LState,setLState] = useState("loading")
     useEffect(() => {
         async function fetchData() {
             const leaderboardRes = await fetch(
@@ -9,14 +11,25 @@ export const Leaderboard = () => {
             );
             let leaderboard = await leaderboardRes.json();
             setLeaderboard(leaderboard.data);
+            setLState("idle");
         }
         fetchData();
     }, [])
     return (
-        <div>
-            {leaderboard && leaderboard.map((user)=>{
-                <h3>{user.username}</h3>
+        <Wrapper>
+            {LState === "idle" && (
+            <>
+            {leaderboard.map((user,k)=>{
+                return <p>{user.username}: {user.balance}</p>
             })}
-        </div>
+            </>
+            )}
+        </Wrapper>
     )
 }
+
+const Wrapper = styled.div`
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+`

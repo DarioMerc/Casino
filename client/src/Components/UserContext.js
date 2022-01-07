@@ -10,8 +10,11 @@ const UserContextProvider = ({ children }) => {
         fetch(`/api/user/${localStorage.getItem("user")}`)
             .then((res) => res.json())
             .then((data) => {
-                setUser(data.user);
-                setBalance(data.user.balance);
+                console.log(data)
+                if(data.status != 404){
+                    setUser(data.user);
+                    setBalance(data.user.balance);
+                }
             });
     },[balance]);
 
