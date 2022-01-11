@@ -11,7 +11,8 @@ const {
     login,
     getUser,
     getLeaderboard,
-    updateBalance
+    updateBalance,
+    generateDeck
 } = require("./handlers");
 
 const app = express()
@@ -31,6 +32,8 @@ app.get("/api/user/:_id",getUser)
 app.get("/api/leaderboard",getLeaderboard)
 //Balance
 app.put("/api/:_id/balance",updateBalance)
+
+app.get("/api/deck/new",generateDeck)
 
 //.gets above
 app.get("*", (req, res) => {

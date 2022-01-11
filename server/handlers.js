@@ -52,7 +52,6 @@ const register = async (req,res) => {
         return res.status(500).json({ status: 500, message: err.message });
     }
 }
-
 //LOGIN
 const login = async (req, res) => {
     const client = new MongoClient(MONGO_URI, options);
@@ -86,7 +85,6 @@ const login = async (req, res) => {
         return res.status(500).json({ status: 500, message: err });
     }
 };
-
 //AUTH USER
 const getUser = async (req,res)=>{
     const _id = req.params._id;
@@ -116,7 +114,6 @@ const getLeaderboard = async (req,res)=>{
         const db = client.db("Casino");
         //SORT ARRAY BY SCORE AND HIDE PASSWORD
         const users = await db.collection("users").find({}, { projection: { password: 0 } }).sort({balance:-1}).toArray();
-        console.log(users)
         await client.close();
         res.status(200).json({status:200,data:users})
     } catch (error) {
@@ -142,9 +139,24 @@ const updateBalance = async (req,res)=>{
             result = await db.collection("users").updateOne({_id},{$set:{balance:user.balance-bet}})
             assert.equal(1,result.modifiedCount)
         }
-        return res.status(200).json({status: 200,message: `${outcome} ${bet}$`})
+        const updatedUser = await db.collection("users").findOne({ _id });
+        return res.status(200).json({status: 200,message: `${outcome} ${bet}$`,balance:updatedUser.balance})
     } catch (error) {
         return res.status(500).json({ status: 500, message: error });
     }
 }
-module.exports = { register, login, getUser,getLeaderboard,updateBalance };
+
+//BLACKJACK
+const generateDeck = async (req,res)=>{
+    const cards = [2,3,4,5,6,7,8,9,10,'J','Q','K','A'];
+    const suits = ['♦','♣','♥','♠'];
+    const deck = [];
+    for (let i = 0; i < cards.length; i++) {
+      for (let j = 0; j < suits.length; j++) {
+        deck.push({number: cards[i], suit: suits[j]});
+      }
+    }
+    return res.status(200).json({status: 200,deck:deck});
+}
+
+module.exports = { register, login, getUser,getLeaderboard,updateBalance,generateDeck };

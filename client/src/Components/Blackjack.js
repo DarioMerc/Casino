@@ -31,9 +31,22 @@ export const Blackjack = () => {
             );
             let deckData = await deckRes.json();
             setDeck(deckData.cards);
+            // const deckRes = await fetch(
+            //     `/api/deck/new`
+            // );
+            // let deckData = await deckRes.json();
+            // setDeck(deckData.deck)
         }
         fetchData();
     }, []);
+
+    function getRandomCard(deck) {
+        const updatedDeck = deck;
+        const randomIndex = Math.floor(Math.random() * updatedDeck.length);
+        const randomCard = updatedDeck[randomIndex];
+        updatedDeck.splice(randomIndex, 1);
+        return { randomCard, updatedDeck };
+      }
 
     function shuffleDeck(array) {
         setDeck();
@@ -123,6 +136,7 @@ export const Blackjack = () => {
         if (dealersTurn) {
             //CHECK IF PLAYER BUSTED (The only ending that can occur before Dealer flips their cards)
             if (playerTotal > 21) {
+                console.log("PLAYER BUSTED")
                 setResult("PLAYER BUSTED");
                 ongoingGame && updateBalance("loss")
                 setOngoingGame(false);
@@ -133,14 +147,17 @@ export const Blackjack = () => {
                     setResult("PUSH");
                     setOngoingGame(false);
                 } else if (dealerTotal > 21) {
+                    console.log("PLAYER WINS")
                     setResult("DEALER BUSTED");
                     ongoingGame && updateBalance("win")
                     setOngoingGame(false);
                 } else if (dealerTotal > playerTotal) {
+                    console.log("DEALER WINS")
                     setResult("DEALER WINS");
                     ongoingGame && updateBalance("loss")
                     setOngoingGame(false);
                 } else if (playerTotal > dealerTotal && playerTotal <= 21) {
+                    console.log("PLAYER WINS")
                     setResult("PLAYER WINS");
                     ongoingGame && updateBalance("win");
                     setOngoingGame(false);
