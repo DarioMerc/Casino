@@ -71,6 +71,7 @@ export const Blackjack = () => {
         setOngoingGame(true);
         setDealersTurn(false);
         setBalance(balance - bet);
+        updateBalance("bet")
         setPlayerHand(deck.splice(0, 2));
         setDealerHand(deck.splice(0, 2));
     }
@@ -182,6 +183,7 @@ export const Blackjack = () => {
                 console.log(data)
             });
     }
+    
     return (
         <>
             <Container>
