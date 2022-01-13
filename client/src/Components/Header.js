@@ -21,6 +21,12 @@ export const Header = () => {
             <NavItem to="/blackjack">
                 <p>BlackJack</p>
             </NavItem>
+            <NavItem to="/slots">
+                <p>Slots</p>
+            </NavItem>
+            <NavItem to="/five card poker">
+                <p>Five Card Poker</p>
+            </NavItem>
             <NavItem to="/leaderboard">
                 <p>Leaderboard</p>
             </NavItem>

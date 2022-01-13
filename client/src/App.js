@@ -6,6 +6,7 @@ import { Header } from "./Components/Header";
 import { Leaderboard } from "./Components/Leaderboard";
 import { Login } from "./Components/Login";
 import Register from "./Components/Register";
+import Slots from "./Components/Slots";
 import { UserContext } from "./Components/UserContext";
 import GlobalStyle from "./GlobalStyle";
 const App = () => {
@@ -20,6 +21,12 @@ const App = () => {
                     {user ? <p>Home</p> : <Login/>}
                 </Route>
                 <Route path="/blackjack">
+                    {user ? <Blackjack /> : <Login/>}
+                </Route>
+                <Route path="/slots">
+                    {user ? <Slots/> : <Login/>}
+                </Route>
+                <Route path="/poker">
                     {user ? <Blackjack /> : <Login/>}
                 </Route>
                 <Route path="/leaderboard">
