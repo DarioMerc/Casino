@@ -1,11 +1,12 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 const fruits = ["🍒", "🍉", "🍊", "🍓", "🍇", "🥝"]
 
 const Slots = () => {
-    //MAKE THIS AN OBJECT WITH 3 SLOTS
-    const [slots,setSlots] = setState()
+    const [slots,setSlots] = useState({slot1:"",slot2:"",slot3:""})
+    const [rolling,setRolling] = useState(null)
+
     function roll(){
         console.log("ROLLING")
         const slot1 = fruits[
@@ -19,28 +20,33 @@ const Slots = () => {
             Math.floor(Math.random() * fruits.length)
         ];
         //SET SLOTS
-        console.log(slot1,slot2,slot3)
-        // setState({slot1: slot1, slot2:slot2, slot3:slot3, rolling: true});
+        setRolling(true)
         setTimeout(() => {
             //SHOW SLOTS TO PLAYER
-            // this.setState({ rolling: false });
+            setSlots({slot1: slot1, slot2:slot2, slot3:slot3});
+            setRolling(false)
         }, 700)
     }
 
+    useEffect(() => {
+        if(!rolling && slots.slot1 !== ''){
+            console.log("CHECKING OUTCOME")
+        }
+    })
     return (
         <Container>
             <h1>Slots</h1>
             <p>-</p>
             <SlotContainer>
-                <Slot>1</Slot>
-                <Slot>2</Slot>
-                <Slot>3</Slot>
+                <Slot>{slots.slot1}</Slot>
+                <Slot>{slots.slot2}</Slot>
+                <Slot>{slots.slot3}</Slot>
             </SlotContainer>
             <BetContainer>
                 <span>
-                    <p>Bet:</p><input value={10}></input>
+                    <p>Bet:</p><input disabled={rolling} value={10}></input>
                 </span>
-                <button onClick={() => roll()}>Spin</button>
+                <button disabled={rolling} onClick={() => roll()}>Spin</button>
             </BetContainer>
         </Container>
     )
@@ -59,7 +65,9 @@ const SlotContainer = styled.div`
 const Slot = styled.div`
     border: 1px solid black;
     margin: 10px;
-    padding:50px;
+    font-size: 75px;
+    min-height: 100px;
+    min-width: 100px;
 `
 const BetContainer = styled.div`
     display: flex;
