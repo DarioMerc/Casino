@@ -31,6 +31,19 @@ const Slots = () => {
     useEffect(() => {
         if(!rolling && slots.slot1 !== ''){
             console.log("CHECKING OUTCOME")
+            let slotsArray = Object.keys(slots).map((key) => [slots[key]]);
+            let counts = {};
+                for (const fruit of slotsArray) {
+                    counts[fruit] = counts[fruit] ? counts[fruit] + 1 : 1;
+                }
+
+            fruits.forEach(fruit => {
+                if(counts[fruit] == 2){
+                    console.log("WIN DOUBLE!")
+                }else if(counts[fruit] == 3){
+                    console.log("WIN TRIPLE")
+                }
+            });
         }
     })
     return (
