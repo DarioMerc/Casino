@@ -226,7 +226,7 @@ export const Blackjack = () => {
                     value={bet}
                     onChange={(e) => {
                         setBet(e.target.value);
-                    }}
+                    }} 
                     disabled={ongoingGame}
                     />
                 <button
