@@ -3,17 +3,19 @@ import styled from 'styled-components'
 import { UserContext } from './UserContext'
 
 const fruits = ["🍒", "🍉", "🍊", "🍓", "🍇", "🥝"]
+let ongoingGame = false;
 
 const Slots = () => {
     const {user, balance, setBalance} = useContext(UserContext)
     const [bet,setBet] = useState(10);
-    const [slots,setSlots] = useState({slot1:"",slot2:"",slot3:""})
+    const [slotsState,setSlotsState] = useState({slot1:"",slot2:"",slot3:""})
     const [rolling,setRolling] = useState(null)
 
     const [result,setResult] = useState("-")
 
     function roll(){
         setResult("-")
+        ongoingGame = true;
         const slot1 = fruits[
             Math.floor(Math.random() * fruits.length)
         ];
@@ -31,36 +33,37 @@ const Slots = () => {
         setRolling(true)
         setTimeout(() => {
             //SHOW SLOTS TO PLAYER
-            setSlots({slot1: slot1, slot2:slot2, slot3:slot3});
+            setSlotsState({slot1: slot1, slot2:slot2, slot3:slot3});
             setRolling(false)
+            checkOutcome({slot1: slot1, slot2:slot2, slot3:slot3})
         }, 700)
     }
 
     //CHECK OUTCOME
     //TURN THIS INTO A FUNCTION INSTEAD THAT CALLS WHEN THE ROLL IS FINISHED
-    useEffect(() => {
-        if(!rolling && slots.slot1 !== ''){
-            console.log("CHECKING OUTCOME")
+    function checkOutcome(slots){
+        console.log("CHECKING OUTCOME")
             let slotsArray = Object.keys(slots).map((key) => [slots[key]]);
             let counts = {};
-                for (const fruit of slotsArray) {
-                    counts[fruit] = counts[fruit] ? counts[fruit] + 1 : 1;
-                }
+            for (const fruit of slotsArray) {
+                counts[fruit] = counts[fruit] ? counts[fruit] + 1 : 1;
+            }
 
             slotsArray.forEach(fruit => {
-                console.log(counts[fruit]);
-                if(result === "-"){
+                if(ongoingGame){
+                    console.log(counts[fruit]);
                     if(counts[fruit] == 2){
                         updateBalance("win",bet*2)
                         setResult("WIN DOUBLE!")
+                        ongoingGame = false;
                     }else if(counts[fruit] == 3){
                         updateBalance("win",bet*3)
                         setResult("WIN TRIPLE")
+                        ongoingGame = false;
                     }
                 }
             });
-        }
-    })
+    }
 
     function updateBalance(outcome,amount){
         fetch(`/api/${user._id}/balance`, {
@@ -84,9 +87,9 @@ const Slots = () => {
             <h1>Slots</h1>
             <p>{result}</p>
             <SlotContainer>
-                <Slot>{slots.slot1}</Slot>
-                <Slot>{slots.slot2}</Slot>
-                <Slot>{slots.slot3}</Slot>
+                <Slot>{slotsState.slot1}</Slot>
+                <Slot>{slotsState.slot2}</Slot>
+                <Slot>{slotsState.slot3}</Slot>
             </SlotContainer>
             <BetContainer>
                 <span>
