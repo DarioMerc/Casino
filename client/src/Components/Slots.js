@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { UserContext } from './UserContext'
+import './slots.css'
 
 const fruits = ["🍒", "🍉", "🍊", "🍓", "🍇", "🥝"]
 let ongoingGame = false;
@@ -8,36 +9,50 @@ let ongoingGame = false;
 const Slots = () => {
     const {user, balance, setBalance} = useContext(UserContext)
     const [bet,setBet] = useState(10);
-    const [slotsState,setSlotsState] = useState({slot1:"",slot2:"",slot3:""})
-    const [rolling,setRolling] = useState(null)
-
+    const [fruit1,setFruit1] = useState("🍒");
+    const [fruit2,setFruit2] = useState("🍒");
+    const [fruit3,setFruit3] = useState("🍒");
+    let slotRef = [useRef(null), useRef(null), useRef(null)];
+    const [rolling,setRolling] = useState(false)
     const [result,setResult] = useState("-")
 
     function roll(){
         setResult("-")
         ongoingGame = true;
-        const slot1 = fruits[
-            Math.floor(Math.random() * fruits.length)
-        ];
-        const slot2 = fruits[    
-            Math.floor(Math.random() * fruits.length)
-        ];
-
-        const slot3 = fruits[    
-            Math.floor(Math.random() * fruits.length)
-        ];
-
-        updateBalance("lose",bet)
-
-        //SET SLOTS
         setRolling(true)
+        // updateBalance("lose",bet)
+
+        
+        slotRef.forEach((slot, i) => {
+            const selected = triggerSlotRotation(slot.current);
+            if(i+1 == 1)
+                setFruit1(selected);
+            else if(i+1 == 2)
+                setFruit2(selected);
+            else 
+                setFruit3(selected);
+        });
+
         setTimeout(() => {
-            //SHOW SLOTS TO PLAYER
-            setSlotsState({slot1: slot1, slot2:slot2, slot3:slot3});
             setRolling(false)
-            checkOutcome({slot1: slot1, slot2:slot2, slot3:slot3})
+            console.log(fruit1,fruit2,fruit3);
+
         }, 700)
+        
     }
+
+    const triggerSlotRotation = ref => {
+        function setTop(top) {
+            ref.style.top = `${top}px`;
+        }
+        let options = ref.children;
+        let randomOption = Math.floor(
+          Math.random() * fruits.length
+        );
+        let choosenOption = options[randomOption];
+        setTop(-choosenOption.offsetTop + 2);
+        return fruits[randomOption];
+    };
 
     //CHECK OUTCOME
     //TURN THIS INTO A FUNCTION INSTEAD THAT CALLS WHEN THE ROLL IS FINISHED
@@ -48,15 +63,16 @@ const Slots = () => {
             for (const fruit of slotsArray) {
                 counts[fruit] = counts[fruit] ? counts[fruit] + 1 : 1;
             }
-
+            console.log(slotsArray);
+            console.log(counts);
             slotsArray.forEach(fruit => {
                 if(ongoingGame){
                     console.log(counts[fruit]);
-                    if(counts[fruit] == 2){
+                    if(counts[fruit] === 2){
                         updateBalance("win",bet*2)
                         setResult("WIN DOUBLE!")
                         ongoingGame = false;
-                    }else if(counts[fruit] == 3){
+                    }else if(counts[fruit] === 3){
                         updateBalance("win",bet*3)
                         setResult("WIN TRIPLE")
                         ongoingGame = false;
@@ -87,9 +103,39 @@ const Slots = () => {
             <h1>Slots</h1>
             <p>{result}</p>
             <SlotContainer>
-                <Slot>{slotsState.slot1}</Slot>
-                <Slot>{slotsState.slot2}</Slot>
-                <Slot>{slotsState.slot3}</Slot>
+                <Slot2>
+                    <SlotSection>
+                        <CContainer ref={slotRef[0]}>
+                            {fruits.map((fruit,i)=>(
+                                <div key={i}>
+                                    <span>{fruit}</span>
+                                </div>
+                            ))}
+                        </CContainer>    
+                    </SlotSection>
+                </Slot2>
+                <Slot2>
+                    <SlotSection>    
+                        <CContainer ref={slotRef[1]}>
+                            {fruits.map((fruit,i)=>(
+                                <div key={i}>
+                                    <span>{fruit}</span>
+                                </div>
+                            ))}
+                        </CContainer>
+                    </SlotSection>
+                </Slot2>
+                <Slot2>
+                    <SlotSection>    
+                        <CContainer ref={slotRef[2]}>
+                            {fruits.map((fruit,i)=>(
+                                <div key={i}>
+                                    <span>{fruit}</span>
+                                </div>
+                            ))}
+                        </CContainer>
+                    </SlotSection>
+                </Slot2>
             </SlotContainer>
             <BetContainer>
                 <span>
@@ -116,12 +162,36 @@ const SlotContainer = styled.div`
     display: flex;
     flex-direction: row;
 `
-const Slot = styled.div`
-    border: 1px solid black;
-    margin: 10px;
-    font-size: 75px;
+const SlotSection = styled.section`
+    position: absolute;
+    border-radius: 15px !important;
+    border: 3px solid black !important;
+    width: 70px;
+    height: 70px;
+    overflow: hidden;
+    background-color: grey;
+    border-radius: 2px;
+    border: 1px solid lightgrey;
+    color: white;
+    font-family: sans-serif;
+    text-align: center;
+    font-size: 25px;
+    line-height: 60px;
+    cursor: default;
+`
+const Slot2 = styled.div`
+    position: relative;
+    display: inline-block;
     min-height: 100px;
-    min-width: 100px;
+    min-width: 80px;
+`
+const CContainer = styled.div`
+    position: absolute;
+    top: 2px;
+    height: 100px;
+    width: 100%;
+    transition: top ease-in-out 0.7s;
+    text-align: center;
 `
 const BetContainer = styled.div`
     display: flex;
