@@ -9,9 +9,9 @@ let ongoingGame = false;
 const Slots = () => {
     const {user, balance, setBalance} = useContext(UserContext)
     const [bet,setBet] = useState(10);
-    const [fruit1,setFruit1] = useState("🍒");
-    const [fruit2,setFruit2] = useState("🍒");
-    const [fruit3,setFruit3] = useState("🍒");
+    const [fruit1,setFruit1] = useState();
+    const [fruit2,setFruit2] = useState();
+    const [fruit3,setFruit3] = useState();
     let slotRef = [useRef(null), useRef(null), useRef(null)];
     const [rolling,setRolling] = useState(false)
     const [result,setResult] = useState("-")
@@ -20,23 +20,25 @@ const Slots = () => {
         setResult("-")
         ongoingGame = true;
         setRolling(true)
-        // updateBalance("lose",bet)
+        updateBalance("lose",bet)
 
-        
+        let slot1,slot2,slot3 = null;
         slotRef.forEach((slot, i) => {
             const selected = triggerSlotRotation(slot.current);
-            if(i+1 == 1)
-                setFruit1(selected);
-            else if(i+1 == 2)
-                setFruit2(selected);
-            else 
-                setFruit3(selected);
+            if(i+1 == 1){
+                slot1 = selected;
+            }
+            else if(i+1 == 2){
+                slot2 = selected;
+            }
+            else{
+                slot3 = selected;
+            } 
         });
 
         setTimeout(() => {
             setRolling(false)
-            console.log(fruit1,fruit2,fruit3);
-
+            checkOutcome([slot1,slot2,slot3])
         }, 700)
         
     }
@@ -56,15 +58,13 @@ const Slots = () => {
 
     //CHECK OUTCOME
     //TURN THIS INTO A FUNCTION INSTEAD THAT CALLS WHEN THE ROLL IS FINISHED
-    function checkOutcome(slots){
+    function checkOutcome(slotsArray){
         console.log("CHECKING OUTCOME")
-            let slotsArray = Object.keys(slots).map((key) => [slots[key]]);
+            // let slotsArray = Object.keys(slots).map((key) => [slots[key]]);
             let counts = {};
             for (const fruit of slotsArray) {
                 counts[fruit] = counts[fruit] ? counts[fruit] + 1 : 1;
             }
-            console.log(slotsArray);
-            console.log(counts);
             slotsArray.forEach(fruit => {
                 if(ongoingGame){
                     console.log(counts[fruit]);
@@ -157,6 +157,10 @@ const Container = styled.div`
     flex-direction: column;
     margin: auto;
     align-items: center;
+    border: 3px solid black;
+    margin: 20px;
+    padding: 20px;
+    border-radius:15px;
 `
 const SlotContainer = styled.div`
     display: flex;
